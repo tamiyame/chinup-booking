@@ -73,6 +73,12 @@ const server = http.createServer((req, res) => {
   if (path === '/api/auth/register') return json(res, { token: MOCK_TOKEN, user: MOCK_USER });
   if (path === '/api/auth/logout') return json(res, { ok: true });
 
+  // Mock Google OAuth — redirect back to root with token in hash (matches real flow)
+  if (path === '/api/auth/google') {
+    res.writeHead(302, { Location: `/#token=${MOCK_TOKEN}` });
+    return res.end();
+  }
+
   // Courses
   if (path === '/api/courses') return json(res, COURSES);
 
