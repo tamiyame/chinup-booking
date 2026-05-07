@@ -119,17 +119,6 @@ const server = http.createServer(async (req, res) => {
 
   if (path === '/api/auth/logout') return json(res, { ok: true });
 
-  // Mock Google OAuth — redirect back to root with token in hash (matches real flow)
-  if (path === '/api/auth/google') {
-    // For demo, the role can be selected via query: /api/auth/google?as=admin
-    const as = u.searchParams.get('as') || 'user';
-    const user = as === 'owner' ? MOCK_OWNER : as === 'admin' ? MOCK_ADMIN : MOCK_USER;
-    const token = `${MOCK_TOKEN}-${user.role}`;
-    sessions.set(token, user);
-    res.writeHead(302, { Location: `/#token=${token}` });
-    return res.end();
-  }
-
   // Courses
   if (path === '/api/courses') return json(res, COURSES);
 

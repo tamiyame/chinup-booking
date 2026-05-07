@@ -9,7 +9,6 @@ POST   /api/auth/login
 POST   /api/auth/register
 POST   /api/auth/logout
 GET    /api/auth/me
-GET    /api/auth/google
 ```
 
 ## New endpoints required
