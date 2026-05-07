@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chin-up Performance · Booking System (Print)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="booking.css" />
+<style>
+  @page { size: A4 landscape; margin: 0.6cm; }
+  html, body { background: #fff; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    margin: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .print-wrap { padding: 24px 28px; }
+  .print-cover { padding: 60px 60px 40px; break-after: page; }
+  .print-cover h1 { font-size: 56px; font-weight: 800; letter-spacing: -0.03em; line-height: 1.05; }
+  .print-cover .lede { font-size: 18px; color: #475569; max-width: 780px; margin-top: 14px; line-height: 1.55; }
+  .print-cover .meta { margin-top: 36px; font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase; color: #64748b; font-weight: 700; }
+
+  .plan-section {
+    break-before: page;
+    padding: 18px 24px 0;
+  }
+  .plan-section h2 {
+    font-size: 30px; font-weight: 800; letter-spacing: -0.025em;
+    margin: 0 0 4px;
+  }
+  .plan-section .sub {
+    font-size: 13px; color: #475569; max-width: 1000px; margin-bottom: 10px; line-height: 1.55;
+  }
+  .plan-section .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: #94a3b8;
+    margin-bottom: 6px;
+  }
+
+  .artboard-page {
+    break-before: page;
+    padding: 14px 22px 0;
+  }
+  .artboard-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 6px;
+  }
+  .artboard-head .label {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.16em; text-transform: uppercase; color: #475569;
+  }
+  .artboard-head .pagenum {
+    font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: 0.1em;
+  }
+  .artboard-head h3 {
+    font-size: 16px; font-weight: 700; margin: 0; color: #0f172a;
+  }
+
+  /* Each artboard is rendered into a fixed-size box, then scaled to fit
+     A4-landscape inner area (~28cm x ~18cm => use px). We scale the inner
+     content using transform so internal layout doesn't change. */
+  .ab-stage {
+    width: 100%;
+    overflow: hidden;
+    background: var(--canvas, #f5f5f0);
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+  }
+  .ab-inner {
+    transform-origin: top left;
+  }
+
+  /* Mobile artboards on a wider page — show two side by side */
+  .mobile-row {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+    break-before: page;
+    padding: 14px 22px 0;
+  }
+  .mobile-row .ab-stage { background: #000; border-radius: 18px; padding: 6px; border: 1px solid #1f2937; }
+  .mobile-row .ab-inner-frame {
+    width: 100%; aspect-ratio: 390 / 844;
+    background: var(--canvas, #f5f5f0);
+    border-radius: 14px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .iphone-frame {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--canvas);
+  }
+  .artboard-scroll { overflow: hidden; }
+
+  /* Suppress tweaks panel in print */
+  .tweaks-panel, [class*="tweaks"] { display: none !important; }
+</style>
+</head>
+<body>
+
+<div id="print-root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script type="text/babel" src="plan-a.jsx"></script>
+<script type="text/babel" src="plan-b.jsx"></script>
+<script type="text/babel" src="plan-c.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+// Print-version: render each artboard inside a scaled box that fits the page.
+
+function ScaledArtboard({ width, height, fitWidth = 1040, fitHeight = 700, children }) {
+  // Compute scale to fit
+  const scaleW = fitWidth / width;
+  const scaleH = fitHeight / height;
+  const scale = Math.min(scaleW, scaleH);
+  const finalW = width * scale;
+  const finalH = height * scale;
+  return (
+    <div className="ab-stage" style={{width: finalW, height: finalH}}>
+      <div className="ab-inner" style={{
+        width: width, height: height,
+        transform: `scale(${scale})`,
+      }}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+// Page wrappers per artboard
+function ArtboardPage({ label, title, page, total, width, height, children }) {
+  return (
+    <section className="artboard-page">
+      <div className="artboard-head">
+        <div>
+          <div className="label">{label}</div>
+          <h3>{title}</h3>
+        </div>
+        <div className="pagenum">{page} / {total}</div>
+      </div>
+      <ScaledArtboard width={width} height={height} fitWidth={1040} fitHeight={680}>
+        {children}
+      </ScaledArtboard>
+    </section>
+  );
+}
+
+// === Plan-A inner state seeded ===
+function PlanASeeded({ initialPage }) {
+  const [page, setPage] = React.useState(initialPage === 'mine' ? 'mine'
+                                       : initialPage === 'coaches-detail' ? 'coaches'
+                                       : 'home');
+  const [openCourse, setOpenCourse] = React.useState(null);
+  const [registered] = React.useState(window.DATA.MY_REGS);
+  const [pickedCoach] = React.useState(initialPage === 'coaches-detail' ? 'c1' : null);
+  const [booking] = React.useState(null);
+
+  return (
+    <div className="mobile-screen" style={{minHeight: '100%'}}>
+      <PlanA_Nav active={page} onNav={() => {}} />
+      {page === 'home' && (
+        <PlanA_Home onOpenCourse={setOpenCourse} registered={registered} />
+      )}
+      {page === 'mine' && (
+        <PlanA_Mine registered={registered} />
+      )}
+      {page === 'coaches' && pickedCoach && !booking && (
+        <PlanA_CoachDetail coachId={pickedCoach}
+                           onBack={() => {}}
+                           onBook={() => {}} />
+      )}
+    </div>
+  );
+}
+
+function PlanBSeeded({ initialPage }) {
+  const [page] = React.useState(initialPage === 'coach-detail' ? 'coaches' : 'cal');
+  const [openCourse, setOpenCourse] = React.useState(null);
+  const [registered] = React.useState(window.DATA.MY_REGS);
+  const [pickedCoach] = React.useState(initialPage === 'coach-detail' ? 'c1' : null);
+  return (
+    <div className="mobile-screen" style={{minHeight: '100%'}}>
+      <PlanB_Nav active={page === 'coaches' ? 'oneonone' : 'cal'} onNav={() => {}} />
+      {page === 'cal' && (
+        <PlanB_Calendar onPickCourse={setOpenCourse} registered={registered} />
+      )}
+      {page === 'coaches' && pickedCoach && (
+        <PlanB_CoachBooking coachId={pickedCoach}
+                            onBack={() => {}}
+                            onBook={() => {}} />
+      )}
+    </div>
+  );
+}
+
+function PlanCSeeded({ initialPage }) {
+  const [page] = React.useState(initialPage === 'coaches' || initialPage === 'coach-detail' || initialPage === 'booking-done' ? 'coaches' : 'home');
+  const [openCourse, setOpenCourse] = React.useState(null);
+  const [registered] = React.useState(window.DATA.MY_REGS);
+  const [pickedCoach] = React.useState(
+    initialPage === 'coach-detail' || initialPage === 'booking-done' ? 'c1' : null);
+  const [booking] = React.useState(
+    initialPage === 'booking-done' ? { coachId: 'c1', date: '05/12', day: '週二', time: '14:00' } : null);
+
+  return (
+    <div className="mobile-screen" style={{minHeight: '100%', background: 'var(--canvas)'}}>
+      <PlanC_Nav active={page === 'coaches' ? 'oneonone' : 'home'} onNav={() => {}} />
+      {page === 'home' && (
+        <PlanC_Home onPickCourse={setOpenCourse} registered={registered} />
+      )}
+      {page === 'coaches' && !pickedCoach && (
+        <PlanC_Coaches onPickCoach={() => {}} />
+      )}
+      {page === 'coaches' && pickedCoach && !booking && (
+        <PlanC_CoachDetail coachId={pickedCoach}
+                           onBack={() => {}}
+                           onBook={() => {}} />
+      )}
+      {page === 'coaches' && booking && (
+        <PlanC_BookingDone booking={booking} onDone={() => {}} />
+      )}
+    </div>
+  );
+}
+
+function PrintApp() {
+  // Ordered list of pages
+  const pages = [
+    // Plan A
+    { plan: 'A · Classic List + GCal Embed',
+      label: 'A1', title: '帶狀課程列表（桌面）', kind: 'planA', initial: 'home', w: 1200, h: 900 },
+    { plan: 'A · Classic List + GCal Embed',
+      label: 'A2', title: '我的課程（含進度／請假／轉讓）', kind: 'planA', initial: 'mine', w: 1200, h: 900 },
+    { plan: 'A · Classic List + GCal Embed',
+      label: 'A3', title: '教練列表 + GCal 嵌入', kind: 'planA', initial: 'coaches-detail', w: 1200, h: 1000 },
+    // Plan B
+    { plan: 'B · Calendar-First + 自建 GCal API',
+      label: 'B1', title: '週曆主畫面', kind: 'planB', initial: 'cal', w: 1200, h: 1000 },
+    { plan: 'B · Calendar-First + 自建 GCal API',
+      label: 'B2', title: '教練預約（自建日曆）', kind: 'planB', initial: 'coach-detail', w: 1200, h: 1000 },
+    // Plan C
+    { plan: 'C · Editorial / Magazine',
+      label: 'C1', title: '編輯式首頁', kind: 'planC', initial: 'home', w: 1200, h: 1300 },
+    { plan: 'C · Editorial / Magazine',
+      label: 'C2', title: '教練列表', kind: 'planC', initial: 'coaches', w: 1200, h: 1100 },
+    { plan: 'C · Editorial / Magazine',
+      label: 'C3', title: '教練個人頁 + 預約', kind: 'planC', initial: 'coach-detail', w: 1200, h: 1100 },
+    { plan: 'C · Editorial / Magazine',
+      label: 'C4', title: '預約完成頁', kind: 'planC', initial: 'booking-done', w: 1200, h: 900 },
+  ];
+
+  // Group by plan for divider pages
+  const grouped = [];
+  let lastPlan = null;
+  pages.forEach((p, i) => {
+    if (p.plan !== lastPlan) {
+      grouped.push({ type: 'divider', plan: p.plan });
+      lastPlan = p.plan;
+    }
+    grouped.push({ type: 'page', ...p, idx: i + 1 });
+  });
+
+  const planSubs = {
+    'A · Classic List + GCal Embed':
+      '延續現有 UI kit。列表 → 詳情抽屜 → 教練卡 → 嵌入 GCal Appointment Schedule。學生熟悉的閱讀方式。',
+    'B · Calendar-First + 自建 GCal API':
+      '週曆作為核心導航。1-on-1 用我們自己畫的時段挑選器，背後串 GCal API。空間使用一目了然。',
+    'C · Editorial / Magazine':
+      '雜誌排版・大圖封面（佔位圖框，可上傳實拍）・編號式編輯設計。每個課程以編號 + 標籤呈現。',
+  };
+
+  return (
+    <>
+      {/* Cover */}
+      <section className="print-cover">
+        <div className="meta">CHIN-UP PERFORMANCE · 2026</div>
+        <h1>報名系統<br/>三個設計方向</h1>
+        <p className="lede">
+          每兩個月一期、每週同一時段的帶狀課程，加上一對一私人教練預約。
+          以下為三個方案的 9 張關鍵畫面，皆共用同一套 design tokens 與元件庫。
+        </p>
+        <div style={{marginTop: 36, display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 18, maxWidth: 980}}>
+          <div style={{padding: 16, border: '1px solid #e2e8f0', borderRadius: 8}}>
+            <div style={{fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0ea5e9'}}>方案 A</div>
+            <div style={{fontWeight: 700, marginTop: 4}}>Classic List</div>
+            <div style={{fontSize: 12, color: '#475569', marginTop: 4, lineHeight: 1.5}}>列表優先・GCal Schedule 嵌入</div>
+          </div>
+          <div style={{padding: 16, border: '1px solid #e2e8f0', borderRadius: 8}}>
+            <div style={{fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0ea5e9'}}>方案 B</div>
+            <div style={{fontWeight: 700, marginTop: 4}}>Calendar-First</div>
+            <div style={{fontSize: 12, color: '#475569', marginTop: 4, lineHeight: 1.5}}>週曆為核心・自建 GCal API 整合</div>
+          </div>
+          <div style={{padding: 16, border: '1px solid #e2e8f0', borderRadius: 8}}>
+            <div style={{fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#0ea5e9'}}>方案 C</div>
+            <div style={{fontWeight: 700, marginTop: 4}}>Editorial</div>
+            <div style={{fontSize: 12, color: '#475569', marginTop: 4, lineHeight: 1.5}}>雜誌排版・大圖封面・編號式設計</div>
+          </div>
+        </div>
+      </section>
+
+      {grouped.map((item, idx) => {
+        if (item.type === 'divider') {
+          return (
+            <section key={'d'+idx} className="plan-section">
+              <div className="eyebrow">Plan</div>
+              <h2>{item.plan}</h2>
+              <p className="sub">{planSubs[item.plan]}</p>
+            </section>
+          );
+        }
+        // page
+        const total = pages.length;
+        return (
+          <ArtboardPage key={item.label}
+                        label={item.label}
+                        title={item.title}
+                        page={item.idx}
+                        total={total}
+                        width={item.w}
+                        height={item.h}>
+            {item.kind === 'planA' && <PlanASeeded initialPage={item.initial} />}
+            {item.kind === 'planB' && <PlanBSeeded initialPage={item.initial} />}
+            {item.kind === 'planC' && <PlanCSeeded initialPage={item.initial} />}
+          </ArtboardPage>
+        );
+      })}
+    </>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('print-root')).render(<PrintApp />);
+
+// Auto-print after fonts + JSX have loaded
+(async () => {
+  try {
+    if (document.fonts && document.fonts.ready) {
+      await document.fonts.ready;
+    }
+  } catch (e) {}
+  // wait for React render
+  await new Promise(r => setTimeout(r, 1500));
+  window.print();
+})();
+</script>
+</body>
+</html>

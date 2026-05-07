@@ -1,0 +1,573 @@
+<!doctype html>
+<html lang="zh-TW">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Chin-up Performance · Booking System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;600;700&family=Noto+Serif+TC:wght@600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="colors_and_type.css" />
+<link rel="stylesheet" href="style.css" />
+<link rel="stylesheet" href="booking.css" />
+<style>
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Sans TC', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  }
+  /* font tweak presets */
+  body.font-serif-display h1, body.font-serif-display h2 {
+    font-family: 'Noto Serif TC', serif;
+    letter-spacing: -0.02em;
+  }
+  body.font-mono-num .text-tabular {
+    font-family: ui-monospace, 'SF Mono', monospace;
+  }
+  /* hide scrollbars within artboards but keep scrollable */
+  .artboard-scroll { overflow-y: auto; }
+  .artboard-scroll::-webkit-scrollbar { display: none; }
+
+  /* iPhone artboard inner constraints */
+  .iphone-frame {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: var(--canvas);
+  }
+</style>
+</head>
+<body data-screen-label="Chin-up Booking · Design Canvas">
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="data.js"></script>
+<script type="text/babel" src="design-canvas.jsx"></script>
+<script type="text/babel" src="ios-frame.jsx"></script>
+<script type="text/babel" src="browser-window.jsx"></script>
+<script type="text/babel" src="tweaks-panel.jsx"></script>
+<script type="text/babel" src="plan-a.jsx"></script>
+<script type="text/babel" src="plan-b.jsx"></script>
+<script type="text/babel" src="plan-c.jsx"></script>
+
+<script type="text/babel">
+const { useState, useEffect } = React;
+
+// Tweak defaults — JSON block the host can rewrite
+const DEFAULTS = /*EDITMODE-BEGIN*/{
+  "primary": "#0ea5e9",
+  "primaryDark": "#0284c7",
+  "primaryLight": "#38bdf8",
+  "primary50":  "#f0f9ff",
+  "primary100": "#e0f2fe",
+  "fontFamily": "default",
+  "darkMode": false,
+  "density": "default"
+}/*EDITMODE-END*/;
+
+// Apply tweaks to body + CSS variables
+function applyTweaks(t) {
+  const r = document.documentElement;
+  r.style.setProperty('--brand-600', t.primary);
+  r.style.setProperty('--brand-700', t.primaryDark);
+  r.style.setProperty('--brand-500', t.primaryLight);
+  r.style.setProperty('--brand-50',  t.primary50);
+  r.style.setProperty('--brand-100', t.primary100);
+
+  document.body.classList.toggle('dark-mode', !!t.darkMode);
+  document.body.classList.toggle('font-serif-display', t.fontFamily === 'serif');
+  document.body.classList.toggle('font-mono-num', t.fontFamily === 'mono');
+
+  document.body.classList.toggle('density-tight', t.density === 'tight');
+  document.body.classList.toggle('density-loose', t.density === 'loose');
+}
+
+function App() {
+  const [tweaks, setTweak] = window.useTweaks
+    ? window.useTweaks(DEFAULTS)
+    : [DEFAULTS, () => {}];
+  useEffect(() => { applyTweaks(tweaks); }, [tweaks]);
+
+  return (
+    <>
+      <DesignCanvas zoomMin={0.18} zoomMax={1.5}>
+        <DCSection id="overview" title="Chin-up Performance · 報名系統 · 三個方案"
+                   subtitle="客戶端為主・每方案展示完整流程：帶狀課程 → 我的課程 → 一對一教練 → 預約完成。Tweaks 面板可即時切換主色／字體／深淺色／排版密度。">
+          <DCArtboard id="overview-note" label="設計策略" width={520} height={420}>
+            <div style={{padding: 28, background: '#fef4a8', height: '100%', fontSize: 14, lineHeight: 1.65, color: '#5a4a2a'}}>
+              <div style={{fontSize: 16, fontWeight: 800, marginBottom: 12}}>設計策略</div>
+              三個方案共用同一套 token + 元件庫，但資訊架構截然不同：
+              <div style={{height: 12}}></div>
+              <b>A · Classic List</b> — 列表優先，學生熟悉的閱讀方式。一對一用 GCal Appointment Schedule iframe 嵌入。
+              <div style={{height: 8}}></div>
+              <b>B · Calendar-First</b> — 週曆作為主要 UI。一對一用自建 calendar UI 串 Google Calendar API。
+              <div style={{height: 8}}></div>
+              <b>C · Editorial</b> — 雜誌排版＋大圖封面（位置已留圖框，可上傳實拍）。
+            </div>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ====================== PLAN A ====================== */}
+        <DCSection id="plan-a" title="方案 A · Classic List + GCal Embed"
+                   subtitle="延續現有 UI kit。列表 → 詳情抽屜 → 教練卡 → 嵌入 GCal Appointment Schedule。">
+          <DCArtboard id="a-desktop-home" label="A1 · 帶狀課程列表（桌面）" width={1200} height={900}>
+            <PlanADesktop initialPage="home" />
+          </DCArtboard>
+          <DCArtboard id="a-desktop-mine" label="A2 · 我的課程（含進度／請假／轉讓）" width={1200} height={900}>
+            <PlanADesktop initialPage="mine" />
+          </DCArtboard>
+          <DCArtboard id="a-desktop-coaches" label="A3 · 教練列表 + GCal 嵌入" width={1200} height={1000}>
+            <PlanADesktop initialPage="coaches-detail" />
+          </DCArtboard>
+          <DCArtboard id="a-mobile-home" label="A4 · 行動版・首頁" width={390} height={844}>
+            <IPhoneArtboard><PlanA /></IPhoneArtboard>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ====================== PLAN B ====================== */}
+        <DCSection id="plan-b" title="方案 B · Calendar-First + 自建 GCal API"
+                   subtitle="週曆作為核心導航。1-on-1 用我們自己畫的時段挑選器，背後串 GCal API。">
+          <DCArtboard id="b-desktop-cal" label="B1 · 週曆主畫面" width={1200} height={1000}>
+            <PlanBDesktop initialPage="cal" />
+          </DCArtboard>
+          <DCArtboard id="b-desktop-detail" label="B2 · 課程側邊抽屜（含扣補狀態）" width={1200} height={1000}>
+            <PlanBDesktopWithDrawer />
+          </DCArtboard>
+          <DCArtboard id="b-desktop-coach" label="B3 · 教練預約（自建日曆）" width={1200} height={1000}>
+            <PlanBDesktop initialPage="coach-detail" />
+          </DCArtboard>
+          <DCArtboard id="b-mobile-cal" label="B4 · 行動版・週曆" width={390} height={844}>
+            <IPhoneArtboard><PlanB /></IPhoneArtboard>
+          </DCArtboard>
+        </DCSection>
+
+        {/* ====================== PLAN C ====================== */}
+        <DCSection id="plan-c" title="方案 C · Editorial / Magazine"
+                   subtitle="雜誌排版・大圖封面（佔位圖框，可上傳實拍）・編號式編輯設計。">
+          <DCArtboard id="c-desktop-home" label="C1 · 編輯式首頁" width={1200} height={1300}>
+            <PlanCDesktop initialPage="home" />
+          </DCArtboard>
+          <DCArtboard id="c-desktop-coaches" label="C2 · 教練列表" width={1200} height={1100}>
+            <PlanCDesktop initialPage="coaches" />
+          </DCArtboard>
+          <DCArtboard id="c-desktop-coach" label="C3 · 教練個人頁 + 預約" width={1200} height={1100}>
+            <PlanCDesktop initialPage="coach-detail" />
+          </DCArtboard>
+          <DCArtboard id="c-desktop-done" label="C4 · 預約完成頁" width={1200} height={900}>
+            <PlanCDesktop initialPage="booking-done" />
+          </DCArtboard>
+        </DCSection>
+
+        {/* ====================== APPENDIX ====================== */}
+        <DCSection id="appendix" title="附錄 · 細節元件"
+                   subtitle="共用的 micro 元件，跨三個方案使用。">
+          <DCArtboard id="x-progress" label="堂數進度條（已上／請假／未上）" width={520} height={280}>
+            <ProgressShowcase />
+          </DCArtboard>
+          <DCArtboard id="x-period-rail" label="期數選擇 · 6 期橫向" width={900} height={220}>
+            <PeriodRailShowcase />
+          </DCArtboard>
+          <DCArtboard id="x-status-badges" label="報名狀態 badges" width={520} height={280}>
+            <StatusBadgeShowcase />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+
+      {/* Tweaks panel */}
+      <BookingTweaks tweaks={tweaks} setTweak={setTweak} />
+    </>
+  );
+}
+
+// ---- helpers / showcase artboards ----
+
+function PlanADesktop({ initialPage }) {
+  // Render PlanA but with default page set
+  // simpler: render PlanA, and use a tiny wrapper to programmatically nav
+  return (
+    <div className="iphone-frame artboard-scroll" style={{height: '100%'}}>
+      <PlanADesktopInner initialPage={initialPage} />
+    </div>
+  );
+}
+
+function PlanADesktopInner({ initialPage }) {
+  // We'll re-implement minimally by re-using PlanA and seeding initial state
+  return <PlanASeeded initialPage={initialPage} />;
+}
+
+function PlanASeeded({ initialPage }) {
+  // Use the same inner state machine but seeded
+  const [page, setPage] = React.useState(initialPage === 'mine' ? 'mine'
+                                       : initialPage === 'coaches' ? 'coaches'
+                                       : initialPage === 'coaches-detail' ? 'coaches'
+                                       : 'home');
+  const [openCourse, setOpenCourse] = React.useState(null);
+  const [registered, setRegistered] = React.useState(window.DATA.MY_REGS);
+  const [pickedCoach, setPickedCoach] = React.useState(initialPage === 'coaches-detail' ? 'c1' : null);
+  const [booking, setBooking] = React.useState(null);
+
+  const handleRegister = () => {
+    if (!openCourse) return;
+    setRegistered(prev => [...prev, {
+      id: Date.now(), courseId: openCourse.id, period: 'p3',
+      total: 8, attended: 0, upcoming: 8, leave: 0, transferable: 0,
+    }]);
+    setOpenCourse(null);
+  };
+
+  return (
+    <div className="mobile-screen" style={{minHeight: '100%'}}>
+      <PlanA_Nav active={page} onNav={(id) => {
+        if (id === 'home') setPage('home');
+        if (id === 'oneonone') { setPage('coaches'); setPickedCoach(null); setBooking(null); }
+        if (id === 'mine') setPage('mine');
+      }} />
+      {page === 'home' && (
+        <PlanA_Home onOpenCourse={setOpenCourse} registered={registered} />
+      )}
+      {page === 'mine' && (
+        <PlanA_Mine registered={registered} />
+      )}
+      {page === 'coaches' && !pickedCoach && (
+        <PlanA_Coaches onPickCoach={setPickedCoach} />
+      )}
+      {page === 'coaches' && pickedCoach && !booking && (
+        <PlanA_CoachDetail coachId={pickedCoach}
+                           onBack={() => setPickedCoach(null)}
+                           onBook={setBooking} />
+      )}
+      {page === 'coaches' && booking && (
+        <PlanA_BookingDone booking={booking} onDone={() => { setBooking(null); setPickedCoach(null); }} />
+      )}
+      <CourseDetailDrawer
+        course={openCourse}
+        onClose={() => setOpenCourse(null)}
+        onRegister={handleRegister}
+        registered={openCourse && registered.find(r => r.courseId === openCourse.id)}
+      />
+    </div>
+  );
+}
+
+function PlanBDesktop({ initialPage }) {
+  return (
+    <div className="iphone-frame artboard-scroll" style={{height: '100%'}}>
+      <PlanBSeeded initialPage={initialPage} />
+    </div>
+  );
+}
+
+function PlanBSeeded({ initialPage }) {
+  const [page, setPage] = React.useState(initialPage === 'coach-detail' ? 'coaches' : 'cal');
+  const [openCourse, setOpenCourse] = React.useState(null);
+  const [registered, setRegistered] = React.useState(window.DATA.MY_REGS);
+  const [pickedCoach, setPickedCoach] = React.useState(initialPage === 'coach-detail' ? 'c1' : null);
+  const [booking, setBooking] = React.useState(null);
+
+  return (
+    <div className="mobile-screen" style={{minHeight: '100%'}}>
+      <PlanB_Nav active={page === 'coaches' ? 'oneonone' : 'cal'} onNav={(id) => {
+        if (id === 'cal') setPage('cal');
+        if (id === 'oneonone') { setPage('coaches'); setPickedCoach(null); setBooking(null); }
+      }} />
+      {page === 'cal' && (
+        <PlanB_Calendar onPickCourse={setOpenCourse} registered={registered} />
+      )}
+      {page === 'coaches' && !pickedCoach && (
+        <PlanB_Coaches onPickCoach={setPickedCoach} />
+      )}
+      {page === 'coaches' && pickedCoach && !booking && (
+        <PlanB_CoachBooking coachId={pickedCoach}
+                            onBack={() => setPickedCoach(null)}
+                            onBook={setBooking} />
+      )}
+      {page === 'coaches' && booking && (
+        <PlanB_BookingDone booking={booking} onDone={() => { setBooking(null); setPickedCoach(null); }} />
+      )}
+      <PlanB_CoursePanel
+        course={openCourse}
+        registered={registered}
+        onClose={() => setOpenCourse(null)}
+        onRegister={() => setOpenCourse(null)}
+        onCancel={() => setOpenCourse(null)}
+      />
+    </div>
+  );
+}
+
+function PlanBDesktopWithDrawer() {
+  // open the drawer for the first registered course
+  const [openCourse, setOpenCourse] = React.useState(window.DATA.COURSES[0]);
+  const [registered] = React.useState(window.DATA.MY_REGS);
+
+  return (
+    <div className="iphone-frame artboard-scroll" style={{height: '100%'}}>
+      <div className="mobile-screen" style={{minHeight: '100%'}}>
+        <PlanB_Nav active="cal" onNav={() => {}} />
+        <PlanB_Calendar onPickCourse={setOpenCourse} registered={registered} />
+        <PlanB_CoursePanel
+          course={openCourse}
+          registered={registered}
+          onClose={() => setOpenCourse(window.DATA.COURSES[0])}
+          onRegister={() => {}}
+          onCancel={() => {}}
+        />
+      </div>
+    </div>
+  );
+}
+
+function PlanCDesktop({ initialPage }) {
+  return (
+    <div className="iphone-frame artboard-scroll" style={{height: '100%'}}>
+      <PlanCSeeded initialPage={initialPage} />
+    </div>
+  );
+}
+
+function PlanCSeeded({ initialPage }) {
+  const [page, setPage] = React.useState(initialPage === 'coaches' ? 'coaches'
+                                       : initialPage === 'coach-detail' ? 'coaches'
+                                       : initialPage === 'booking-done' ? 'coaches'
+                                       : 'home');
+  const [openCourse, setOpenCourse] = React.useState(null);
+  const [registered, setRegistered] = React.useState(window.DATA.MY_REGS);
+  const [pickedCoach, setPickedCoach] = React.useState(
+    initialPage === 'coach-detail' || initialPage === 'booking-done' ? 'c1' : null);
+  const [booking, setBooking] = React.useState(
+    initialPage === 'booking-done' ? { coachId: 'c1', date: '05/12', day: '週二', time: '14:00' } : null);
+
+  return (
+    <div className="mobile-screen" style={{minHeight: '100%', background: 'var(--canvas)'}}>
+      <PlanC_Nav active={page === 'coaches' ? 'oneonone' : 'home'} onNav={(id) => {
+        if (id === 'home') setPage('home');
+        if (id === 'oneonone') { setPage('coaches'); setPickedCoach(null); setBooking(null); }
+      }} />
+      {page === 'home' && (
+        <PlanC_Home onPickCourse={setOpenCourse} registered={registered} />
+      )}
+      {page === 'coaches' && !pickedCoach && (
+        <PlanC_Coaches onPickCoach={setPickedCoach} />
+      )}
+      {page === 'coaches' && pickedCoach && !booking && (
+        <PlanC_CoachDetail coachId={pickedCoach}
+                           onBack={() => setPickedCoach(null)}
+                           onBook={setBooking} />
+      )}
+      {page === 'coaches' && booking && (
+        <PlanC_BookingDone booking={booking} onDone={() => { setBooking(null); setPickedCoach(null); }} />
+      )}
+      <PlanC_CourseModal
+        course={openCourse}
+        registered={registered}
+        onClose={() => setOpenCourse(null)}
+        onRegister={() => setOpenCourse(null)}
+        onCancel={() => setOpenCourse(null)}
+      />
+    </div>
+  );
+}
+
+// iPhone artboard — wraps mobile screen with status bar + safe-area
+function IPhoneArtboard({ children }) {
+  return (
+    <div style={{
+      width: '100%', height: '100%',
+      background: '#000',
+      borderRadius: 32,
+      padding: 8,
+      overflow: 'hidden',
+    }}>
+      <div style={{
+        width: '100%', height: '100%',
+        background: 'var(--canvas)',
+        borderRadius: 26,
+        overflow: 'hidden',
+        position: 'relative',
+      }}>
+        {/* Status bar */}
+        <div style={{
+          height: 44, padding: '0 24px',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          fontSize: 13, fontWeight: 700,
+          flexShrink: 0,
+        }}>
+          <span className="text-tabular">9:41</span>
+          <div style={{
+            position: 'absolute', top: 12, left: '50%', transform: 'translateX(-50%)',
+            width: 100, height: 30, borderRadius: 20, background: '#000',
+          }}></div>
+          <span style={{display: 'flex', gap: 6, alignItems: 'center'}}>
+            <span style={{fontSize: 11}}>●●●●</span>
+            <span style={{fontSize: 11}}>5G</span>
+            <span>🔋</span>
+          </span>
+        </div>
+        <div className="artboard-scroll" style={{height: 'calc(100% - 44px)'}}>
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Showcases ----
+
+function ProgressShowcase() {
+  return (
+    <div style={{padding: 24, background: 'var(--canvas)', height: '100%'}}>
+      <div style={{fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 14}}>
+        報名進度條
+      </div>
+      <div className="card" style={{marginBottom: 14}}>
+        <div className="flex items-center justify-between mb-3">
+          <div style={{fontSize: 14, fontWeight: 700}}>重量訓練・進階</div>
+          <div className="text-tabular text-sm">5 / 8 堂</div>
+        </div>
+        <div className="prog-bar">
+          <div className="pb-attended" style={{width: '50%'}}></div>
+          <div className="pb-leave" style={{width: '12.5%'}}></div>
+          <div className="pb-upcoming" style={{width: '37.5%'}}></div>
+        </div>
+        <div className="flex gap-3 mt-3" style={{fontSize: 11}}>
+          <span style={{color: 'var(--brand-700)'}}>● 已上 4</span>
+          <span style={{color: '#a16207'}}>● 請假 1</span>
+          <span style={{color: 'var(--ink-mute)'}}>● 未上 3</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PeriodRailShowcase() {
+  return (
+    <div style={{padding: 24, background: 'var(--canvas)', height: '100%'}}>
+      <div className="period-rail">
+        {window.DATA.PERIODS.map((p, i) => (
+          <div key={p.id} className={`period-pill ${i === 2 ? 'active' : ''}`} style={{minWidth: 132}}>
+            <div className="pp-label">{p.label}</div>
+            <div className="pp-months">{p.months}</div>
+            <div className="pp-meta">{p.status === 'past' ? '已結束' : p.status === 'current' ? '進行中' : p.status === 'open' ? '報名中' : '尚未開放'}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StatusBadgeShowcase() {
+  return (
+    <div style={{padding: 24, background: 'var(--canvas)', height: '100%'}}>
+      <div className="grid gap-3">
+        <div>
+          <div style={{fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 8}}>報名狀態</div>
+          <div className="flex flex-wrap gap-2">
+            <span className="badge badge-confirmed">已報名</span>
+            <span className="badge badge-waitlisted">候補</span>
+            <span className="badge badge-cancelled">已取消</span>
+            <span className="badge badge-completed">已上課</span>
+            <span className="badge badge-open">未上</span>
+          </div>
+        </div>
+        <div>
+          <div style={{fontSize: 11, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: 8}}>場次狀態</div>
+          <div className="flex flex-wrap gap-2">
+            <span className="badge badge-open">開放報名</span>
+            <span className="badge badge-confirmed">已成班</span>
+            <span className="badge badge-cancelled">未開課</span>
+            <span className="badge badge-completed">已結束</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ---- Tweaks Panel ----
+
+function BookingTweaks({ tweaks, setTweak }) {
+  const TweaksPanel = window.TweaksPanel;
+  const TweakSection = window.TweakSection;
+  const TweakColor = window.TweakColor;
+  const TweakRadio = window.TweakRadio;
+  const TweakToggle = window.TweakToggle;
+  const TweakSelect = window.TweakSelect;
+
+  if (!TweaksPanel) return null;
+
+  // 4 curated palettes (each is { primary, primaryDark, primaryLight, primary50, primary100 })
+  const palettes = [
+    { name: 'Sky (預設)',  vals: { primary:'#0ea5e9', primaryDark:'#0284c7', primaryLight:'#38bdf8', primary50:'#f0f9ff', primary100:'#e0f2fe' } },
+    { name: 'Charcoal', vals: { primary:'#0f172a', primaryDark:'#000000', primaryLight:'#475569', primary50:'#f1f5f9', primary100:'#e2e8f0' } },
+    { name: 'Forest',  vals: { primary:'#047857', primaryDark:'#065f46', primaryLight:'#10b981', primary50:'#ecfdf5', primary100:'#d1fae5' } },
+    { name: 'Crimson', vals: { primary:'#b91c1c', primaryDark:'#7f1d1d', primaryLight:'#ef4444', primary50:'#fef2f2', primary100:'#fee2e2' } },
+  ];
+
+  const activeIdx = palettes.findIndex(p => p.vals.primary === tweaks.primary);
+
+  return (
+    <TweaksPanel title="Tweaks">
+      <TweakSection title="主色 / 配色">
+        <div style={{display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8}}>
+          {palettes.map((p, i) => (
+            <button key={p.name}
+                    onClick={() => setTweak(p.vals)}
+                    style={{
+                      padding: 10,
+                      border: `1.5px solid ${activeIdx === i ? '#0f172a' : '#e5e7eb'}`,
+                      background: activeIdx === i ? '#f8faf9' : '#fff',
+                      borderRadius: 10,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                    }}>
+              <div style={{display: 'flex', gap: 4, marginBottom: 6}}>
+                <div style={{width: 24, height: 24, borderRadius: 6, background: p.vals.primary}}></div>
+                <div style={{width: 14, height: 24, borderRadius: 4, background: p.vals.primaryDark}}></div>
+                <div style={{width: 14, height: 24, borderRadius: 4, background: p.vals.primaryLight}}></div>
+                <div style={{width: 14, height: 24, borderRadius: 4, background: p.vals.primary50, border: '1px solid #e5e7eb'}}></div>
+              </div>
+              <div style={{fontSize: 11, fontWeight: 600}}>{p.name}</div>
+            </button>
+          ))}
+        </div>
+      </TweakSection>
+
+      <TweakSection title="字體組合">
+        <TweakRadio
+          value={tweaks.fontFamily}
+          onChange={(v) => setTweak('fontFamily', v)}
+          options={[
+            { value: 'default', label: 'Inter + LiHei' },
+            { value: 'serif',   label: '標題襯線' },
+            { value: 'mono',    label: '數字等寬' },
+          ]} />
+      </TweakSection>
+
+      <TweakSection title="主題">
+        <TweakToggle
+          label="深色模式"
+          checked={tweaks.darkMode}
+          onChange={(v) => setTweak('darkMode', v)} />
+      </TweakSection>
+
+      <TweakSection title="排版密度">
+        <TweakRadio
+          value={tweaks.density}
+          onChange={(v) => setTweak('density', v)}
+          options={[
+            { value: 'tight',   label: '緊湊' },
+            { value: 'default', label: '預設' },
+            { value: 'loose',   label: '寬鬆' },
+          ]} />
+      </TweakSection>
+    </TweaksPanel>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

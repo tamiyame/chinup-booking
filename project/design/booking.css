@@ -1,0 +1,476 @@
+/* ==============================================================
+   Chin-up Performance — Booking System extras
+   adds tokens for: period rail, calendar grid, coach grid, gcal
+   ============================================================== */
+
+/* ---------- Period rail (帶狀課程期數) ---------- */
+.period-rail {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding: 4px 0 12px;
+  scrollbar-width: none;
+}
+.period-rail::-webkit-scrollbar { display: none; }
+.period-pill {
+  flex: 0 0 auto;
+  padding: 10px 16px 12px;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  cursor: pointer;
+  text-align: left;
+  transition: all 160ms ease;
+  min-width: 132px;
+}
+.period-pill:hover { border-color: rgba(56,189,248,0.35); }
+.period-pill.active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
+}
+.period-pill .pp-label {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; opacity: .75;
+}
+.period-pill .pp-months {
+  font-size: 14px; font-weight: 700; margin-top: 2px; letter-spacing: -0.01em;
+}
+.period-pill .pp-meta {
+  font-size: 11px; opacity: .65; margin-top: 4px;
+}
+.period-pill.active .pp-meta { opacity: .85; }
+
+/* ---------- Course strip card (per weekday, full row) ---------- */
+.strip-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 64px 1fr auto;
+  gap: 18px;
+  align-items: center;
+  transition: all 160ms ease;
+  cursor: pointer;
+}
+.strip-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: rgba(56,189,248,0.3);
+}
+.dow-block {
+  width: 64px; height: 64px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, var(--brand-100), var(--brand-50));
+  color: var(--brand-700);
+  display: grid; place-items: center;
+  text-align: center;
+}
+.dow-block .dow-zh {
+  font-size: 24px; font-weight: 800; line-height: 1; letter-spacing: -0.02em;
+}
+.dow-block .dow-en {
+  font-size: 9px; font-weight: 700; letter-spacing: 0.18em; opacity: 0.7;
+  margin-top: 4px;
+}
+.strip-card .sc-title {
+  font-size: 18px; font-weight: 700; letter-spacing: -0.01em;
+}
+.strip-card .sc-desc {
+  color: var(--ink-soft); font-size: 13px; margin-top: 4px;
+}
+.strip-card .sc-meta {
+  display: flex; gap: 14px; margin-top: 10px;
+  font-size: 12px; color: var(--ink-mute);
+}
+
+/* ---------- Coach card ---------- */
+.coach-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+.coach-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+  border-color: rgba(56,189,248,0.3);
+}
+.coach-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--brand-100), var(--brand-50));
+  color: var(--brand-700);
+  display: grid; place-items: center;
+  font-size: 22px; font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+.coach-card .cc-name {
+  font-size: 17px; font-weight: 700; letter-spacing: -0.01em;
+}
+.coach-card .cc-name-en {
+  font-size: 11px; color: var(--ink-mute); letter-spacing: 0.04em;
+  text-transform: uppercase; margin-top: 2px;
+}
+.coach-card .cc-tag {
+  font-size: 12px; color: var(--brand-700); font-weight: 600;
+}
+.coach-card .cc-bio {
+  font-size: 13px; color: var(--ink-soft); line-height: 1.55;
+}
+.tag-chip {
+  display: inline-flex;
+  font-size: 11px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  background: #f1f5f9;
+  color: #334155;
+  font-weight: 500;
+}
+
+/* ---------- Calendar (week view) ---------- */
+.cal-week {
+  display: grid;
+  grid-template-columns: 48px repeat(7, 1fr);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.cal-week > div { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+.cal-week > div:nth-child(7n + 1) { border-right: 1px solid var(--line); } /* time col */
+.cal-week .cal-h {
+  padding: 10px 8px;
+  text-align: center;
+  background: #f8faf9;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+.cal-week .cal-h .cal-h-num {
+  font-size: 16px; color: var(--ink); font-weight: 800; margin-top: 2px;
+  letter-spacing: -0.02em;
+}
+.cal-week .cal-h.today .cal-h-num {
+  background: var(--brand-600);
+  color: white;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: inline-grid; place-items: center;
+  margin: 2px auto 0;
+}
+.cal-week .cal-tlabel {
+  font-size: 10px;
+  color: var(--ink-mute);
+  text-align: right;
+  padding: 6px 6px 0 0;
+  border-bottom: none;
+}
+.cal-cell {
+  position: relative;
+  min-height: 48px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 100ms ease;
+}
+.cal-cell:hover { background: var(--brand-50); }
+.cal-event {
+  position: absolute;
+  left: 4px; right: 4px;
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 120ms ease;
+}
+.cal-event:hover { transform: translateY(-1px); }
+.cal-event.evt-class {
+  background: var(--brand-50);
+  border-color: rgba(56,189,248,0.35);
+  color: var(--brand-700);
+}
+.cal-event.evt-1on1 {
+  background: #fef3c7;
+  border-color: #fcd34d;
+  color: #a16207;
+}
+.cal-event.evt-mine {
+  background: var(--brand-600);
+  border-color: var(--brand-700);
+  color: white;
+}
+.cal-event .cev-time {
+  font-size: 10px; opacity: 0.85; font-weight: 500;
+}
+
+/* ---------- Slot grid (1-on-1 booking) ---------- */
+.slot-day {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 14px;
+}
+.slot-day-h {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 10px;
+}
+.slot-day-h .sd-date {
+  font-size: 18px; font-weight: 800; letter-spacing: -0.02em;
+}
+.slot-day-h .sd-day { font-size: 13px; color: var(--ink-mute); }
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 6px;
+}
+.slot-btn {
+  padding: 9px 6px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: all 140ms ease;
+  color: var(--ink);
+}
+.slot-btn:hover {
+  background: var(--brand-50);
+  border-color: rgba(56,189,248,0.4);
+  color: var(--brand-700);
+}
+.slot-btn.selected {
+  background: var(--brand-600);
+  border-color: var(--brand-700);
+  color: white;
+}
+.slot-btn.unavailable {
+  opacity: 0.35;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* ---------- Progress bar (堂數) ---------- */
+.prog-bar {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  overflow: hidden;
+  display: flex;
+}
+.prog-bar .pb-attended { background: var(--brand-600); }
+.prog-bar .pb-upcoming { background: var(--brand-100); }
+.prog-bar .pb-leave    { background: #fcd34d; }
+
+/* ---------- "GCal embed" mock ---------- */
+.gcal-embed {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: white;
+}
+.gcal-embed-head {
+  padding: 14px 18px;
+  background: #f8faf9;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.gcal-embed-head .gcal-tag {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; color: var(--ink-soft); font-weight: 600;
+}
+.gcal-embed-body {
+  padding: 18px;
+}
+
+/* ---------- Stat tile ---------- */
+.stat-tile {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+}
+.stat-tile .st-label {
+  font-size: 11px; font-weight: 600; color: var(--ink-soft);
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.stat-tile .st-value {
+  font-size: 28px; font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-top: 6px;
+}
+.stat-tile .st-meta {
+  font-size: 12px; color: var(--ink-mute); margin-top: 4px;
+}
+
+/* ---------- Editorial / Magazine tokens ---------- */
+.mag-hero {
+  background: var(--ink);
+  color: white;
+  border-radius: 20px;
+  padding: 40px 36px;
+  position: relative;
+  overflow: hidden;
+}
+.mag-hero::before {
+  content: '';
+  position: absolute; right: -80px; top: -80px;
+  width: 280px; height: 280px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(56,189,248,0.45), transparent 70%);
+}
+.mag-hero h1 {
+  font-size: 44px; font-weight: 800; letter-spacing: -0.04em;
+  line-height: 1.05;
+  position: relative;
+}
+.mag-hero .mh-eyebrow {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 700; letter-spacing: 0.18em;
+  text-transform: uppercase;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 6px 12px;
+  border-radius: 9999px;
+  margin-bottom: 20px;
+  color: var(--brand-500);
+  position: relative;
+}
+.mag-hero p {
+  color: rgba(255,255,255,0.7); font-size: 16px; margin-top: 14px;
+  max-width: 540px; line-height: 1.6;
+  position: relative;
+}
+
+.mag-card {
+  background: var(--surface);
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  overflow: hidden;
+  transition: all 200ms ease;
+  cursor: pointer;
+}
+.mag-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(56,189,248,0.4);
+}
+.mag-photo {
+  aspect-ratio: 16 / 10;
+  background: var(--ink);
+  position: relative;
+  overflow: hidden;
+}
+.mag-photo .mp-grid {
+  position: absolute; inset: 0;
+  background-image:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 24px),
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 24px);
+}
+.mag-photo .mp-num {
+  position: absolute;
+  bottom: 18px; left: 18px;
+  font-size: 80px; font-weight: 800;
+  color: white; opacity: 0.92;
+  letter-spacing: -0.05em;
+  line-height: 0.85;
+}
+.mag-photo .mp-tag {
+  position: absolute; top: 18px; left: 18px;
+  font-size: 11px; font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.85);
+  padding: 5px 10px;
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+}
+.mag-card .mc-body { padding: 22px; }
+.mag-card h3 {
+  font-size: 19px; font-weight: 700; letter-spacing: -0.01em;
+}
+.mag-card .mc-meta {
+  display: flex; gap: 14px;
+  font-size: 12px; color: var(--ink-mute);
+  margin-top: 10px;
+  padding-top: 14px;
+  border-top: 1px solid var(--line);
+}
+
+/* ---------- Mobile tweaks ---------- */
+.mobile-screen {
+  background: var(--canvas);
+  min-height: 100%;
+  background-image:
+    radial-gradient(1200px 500px at -10% -20%, rgba(56, 189, 248, 0.08), transparent 60%),
+    radial-gradient(800px 400px at 110% 10%, rgba(14, 165, 233, 0.05), transparent 55%);
+}
+
+/* ---------- Generic ---------- */
+.divider-line {
+  height: 1px;
+  background: var(--line);
+  margin: 16px 0;
+}
+.text-tabular { font-variant-numeric: tabular-nums; }
+
+/* dark mode override (set by Tweaks) */
+body.dark-mode {
+  --canvas: #0a0e1a;
+  --surface: #131826;
+  --surface-raised: #1a2030;
+  --ink: #f1f5f9;
+  --ink-soft: #94a3b8;
+  --ink-mute: #64748b;
+  --line: #1f2937;
+}
+body.dark-mode .strip-card,
+body.dark-mode .card,
+body.dark-mode .coach-card,
+body.dark-mode .stat-tile,
+body.dark-mode .slot-day,
+body.dark-mode .gcal-embed,
+body.dark-mode .mag-card {
+  background: var(--surface);
+}
+body.dark-mode .navbar { background: rgba(19,24,38,0.85) !important; }
+body.dark-mode .day-group-content { background: #0f1320; }
+body.dark-mode .data-table th { background: #1a2030; }
+body.dark-mode .gcal-embed-head { background: #0f1320; }
+body.dark-mode .period-pill { background: var(--surface); }
+body.dark-mode .period-pill.active { background: var(--brand-600); border-color: var(--brand-600); }
+body.dark-mode .tag-chip { background: #1f2937; color: #cbd5e1; }
+body.dark-mode .empty-state { background: var(--surface); border-color: var(--line); }
+
+/* density (set by Tweaks) */
+body.density-tight .card,
+body.density-tight .strip-card,
+body.density-tight .coach-card,
+body.density-tight .stat-tile { padding: 14px 16px; }
+body.density-tight .hero { padding: 28px 0 20px; }
+body.density-tight .day-group summary { padding: 14px 16px; }
+
+body.density-loose .card,
+body.density-loose .strip-card,
+body.density-loose .coach-card,
+body.density-loose .stat-tile { padding: 28px 30px; }
+body.density-loose .hero { padding: 56px 0 44px; }
+body.density-loose .day-group summary { padding: 24px 28px; }
