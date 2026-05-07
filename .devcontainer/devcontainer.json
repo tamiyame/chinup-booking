@@ -1,0 +1,10 @@
+{
+  "name": "Chin-up Booking",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+  "forwardPorts": [5173, 3000],
+  "portsAttributes": {
+    "5173": { "label": "Vite (frontend)", "onAutoForward": "openBrowser" },
+    "3000": { "label": "Mock API", "onAutoForward": "silent" }
+  },
+  "postCreateCommand": "npm install"
+}
