@@ -50,14 +50,45 @@ const SLOTS = {
 };
 
 const MOCK_USER = { id: 1, name: '王小明', email: 'wang@example.com', role: 'user' };
+const MOCK_ADMIN = { id: 2, name: '管理者 Admin', email: 'admin@chinup.com', role: 'admin' };
+const MOCK_OWNER = { id: 3, name: '老闆 Owner', email: 'owner@chinup.com', role: 'owner' };
 const MOCK_TOKEN = 'mock-token-dev';
+
+// Decide which user to return based on email pattern (mock OAuth/login)
+function userFor(email = '') {
+  const e = String(email).toLowerCase();
+  if (e.startsWith('owner') || e.includes('owner@')) return MOCK_OWNER;
+  if (e.startsWith('admin') || e.includes('admin@')) return MOCK_ADMIN;
+  return MOCK_USER;
+}
+
+// Read JSON body for POST/PUT/PATCH
+function readBody(req) {
+  return new Promise((resolve) => {
+    let data = '';
+    req.on('data', (c) => { data += c; });
+    req.on('end', () => {
+      try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); }
+    });
+  });
+}
+
+// Track which user is currently logged in (per-token, simple in-memory)
+const sessions = new Map(); // token → user
+sessions.set(MOCK_TOKEN, MOCK_USER); // default
+
+function currentUser(req) {
+  const auth = req.headers['authorization'] || '';
+  const token = auth.replace(/^Bearer\s+/i, '');
+  return sessions.get(token) || MOCK_USER;
+}
 
 function json(res, data, status = 200) {
   res.writeHead(status, { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type,Authorization' });
   res.end(JSON.stringify(data));
 }
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(204, { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type,Authorization', 'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE' });
     return res.end();
@@ -68,14 +99,34 @@ const server = http.createServer((req, res) => {
   const period = u.searchParams.get('period_id') || 'p3';
 
   // Auth
-  if (path === '/api/auth/me') return json(res, MOCK_USER);
-  if (path === '/api/auth/login') return json(res, { token: MOCK_TOKEN, user: MOCK_USER });
-  if (path === '/api/auth/register') return json(res, { token: MOCK_TOKEN, user: MOCK_USER });
+  if (path === '/api/auth/me') return json(res, currentUser(req));
+
+  if (path === '/api/auth/login' && req.method === 'POST') {
+    const body = await readBody(req);
+    const user = userFor(body.email);
+    const token = `${MOCK_TOKEN}-${user.role}`;
+    sessions.set(token, user);
+    return json(res, { token, user });
+  }
+
+  if (path === '/api/auth/register' && req.method === 'POST') {
+    const body = await readBody(req);
+    const user = userFor(body.email);
+    const token = `${MOCK_TOKEN}-${user.role}`;
+    sessions.set(token, user);
+    return json(res, { token, user });
+  }
+
   if (path === '/api/auth/logout') return json(res, { ok: true });
 
   // Mock Google OAuth — redirect back to root with token in hash (matches real flow)
   if (path === '/api/auth/google') {
-    res.writeHead(302, { Location: `/#token=${MOCK_TOKEN}` });
+    // For demo, the role can be selected via query: /api/auth/google?as=admin
+    const as = u.searchParams.get('as') || 'user';
+    const user = as === 'owner' ? MOCK_OWNER : as === 'admin' ? MOCK_ADMIN : MOCK_USER;
+    const token = `${MOCK_TOKEN}-${user.role}`;
+    sessions.set(token, user);
+    res.writeHead(302, { Location: `/#token=${token}` });
     return res.end();
   }
 
